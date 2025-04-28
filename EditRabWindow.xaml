@@ -1,0 +1,57 @@
+﻿<Window x:Class="VecherVKomnatu.EditRabWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Редактирование работника" 
+        Width="400" 
+        Height="450"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Label Content="ФИО:"/>
+        <TextBox Grid.Row="1" Text="{Binding Rab.FIO, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Grid.Row="2" Content="Телефон:"/>
+        <TextBox Grid.Row="3" Text="{Binding Rab.tel, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Grid.Row="4" Content="Дата рождения:"/>
+        <DatePicker Grid.Row="5" SelectedDate="{Binding Rab.dateR, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Grid.Row="6" Content="Оклад:"/>
+        <TextBox Grid.Row="7" Text="{Binding Rab.salary, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Grid.Row="8" Content="Бригада:"/>
+        <ComboBox Grid.Row="9" 
+                  ItemsSource="{Binding BrigadaList}"
+                  DisplayMemberPath="name"
+                  SelectedValuePath="id"
+                  SelectedValue="{Binding Rab.brigada, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <Label Grid.Row="10" Content="Паспорт (серия и номер):"/>
+        <StackPanel Grid.Row="11" Orientation="Horizontal">
+            <TextBox Width="80" Text="{Binding Rab.seria, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0"/>
+            <TextBox Width="150" Text="{Binding Rab.nomer, UpdateSourceTrigger=PropertyChanged}"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="12" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Сохранить" Width="80" Margin="5" Click="btnSave_Click"/>
+            <Button Content="Отмена" Width="80" Margin="5" Click="btnCancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

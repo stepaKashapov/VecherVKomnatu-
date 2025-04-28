@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="bdcbf330f15a47fdbcf6356cea8b341c" Name="Diagram1">
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Brigada" Width="1.5" PointX="0.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Dogovor" Width="1.5" PointX="3" PointY="4.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.EdIzmer" Width="1.5" PointX="0.75" PointY="11.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Klient" Width="1.5" PointX="0.75" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Login" Width="1.5" PointX="10" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Mat" Width="1.5" PointX="3" PointY="11.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Oplata" Width="1.5" PointX="5.25" PointY="4.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Rab" Width="1.5" PointX="3" PointY="8" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Smeta" Width="1.5" PointX="5.25" PointY="1.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.sysdiagrams" Width="1.5" PointX="7.75" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.TypeUser" Width="1.5" PointX="7.75" PointY="1.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="ВечерВКвартируModel.Uslugi" Width="1.5" PointX="3" PointY="14.5" IsExpanded="true" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Dogovor_Brigada" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Rab_Brigada" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Dogovor_Klient" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Oplata_Dogovor1" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Smeta_Dogovor1" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Mat_EdIzmer" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Login_TypeUser" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Smeta_Mat" ManuallyRouted="false" />
+        <AssociationConnector Association="ВечерВКвартируModel.FK_Smeta_Uslugi" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>
