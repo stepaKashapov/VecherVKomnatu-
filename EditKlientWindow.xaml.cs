@@ -4,20 +4,19 @@ using System.Windows;
 namespace VecherVKomnatu
 {
     public partial class EditKlientWindow : Window
-    {
-        public Klient Klient { get; private set; }
+    {public Klient Klient { get; private set; }
 
-        public EditKlientWindow()
+        private readonly ВечерВКвартируEntities _db;
+        
+        public EditKlientWindow(ВечерВКвартируEntities db, Klient klient = null)
         {
             InitializeComponent();
-            Klient = new Klient
-            {
-                dateR = DateTime.Today // Устанавливаем текущую дату по умолчанию
-            };
+            _db = db;
+            Klient = klient ?? new Klient();
             DataContext = this;
         }
 
-        public EditKlientWindow(Klient klient) : this()
+        public EditKlientWindow(Klient klient) 
         {
             if (klient != null)
             {

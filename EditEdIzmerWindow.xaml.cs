@@ -6,15 +6,16 @@ namespace VecherVKomnatu
     public partial class EditEdIzmerWindow : Window
     {
         public EdIzmer EdIzmer { get; private set; }
-
-        public EditEdIzmerWindow()
+        private readonly ВечерВКвартируEntities _db;
+        public EditEdIzmerWindow(ВечерВКвартируEntities db, EdIzmer edIzmer = null)
         {
             InitializeComponent();
-            EdIzmer = new EdIzmer();
+            _db = db;
+            EdIzmer = edIzmer ?? new EdIzmer();
             DataContext = this;
         }
 
-        public EditEdIzmerWindow(EdIzmer edIzmer) : this()
+        public EditEdIzmerWindow(EdIzmer edIzmer)
         {
             EdIzmer = edIzmer;
         }

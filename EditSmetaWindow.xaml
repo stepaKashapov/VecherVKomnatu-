@@ -63,19 +63,19 @@
 
         <Label Content="Договор:" Grid.Row="0"/>
         <ComboBox Grid.Row="1" 
-                  ItemsSource="{Binding DogovorList}"
-                  DisplayMemberPath="id"
-                  SelectedValuePath="id"
-                  SelectedValue="{Binding Smeta.dogovor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                  Margin="0,0,0,5"/>
+          ItemsSource="{Binding DogovorList}"
+          DisplayMemberPath="id"
+          SelectedValuePath="id"
+          SelectedValue="{Binding Smeta.dog, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          Margin="0,0,0,5"/>
 
         <Label Content="Услуга:" Grid.Row="2"/>
         <ComboBox Grid.Row="3" 
-                  ItemsSource="{Binding UslugiList}"
-                  DisplayMemberPath="name"
-                  SelectedValuePath="id"
-                  SelectedValue="{Binding Smeta.services, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                  Margin="0,0,0,5"/>
+          ItemsSource="{Binding UslugiList}"
+          DisplayMemberPath="name"
+          SelectedValuePath="id"
+          SelectedValue="{Binding Smeta.uslugi, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          Margin="0,0,0,5"/>
 
         <Label Content="Материал:" Grid.Row="4"/>
         <ComboBox Grid.Row="5" 

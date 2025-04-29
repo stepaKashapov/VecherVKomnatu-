@@ -5,16 +5,18 @@ namespace VecherVKomnatu
 {
     public partial class EditUslugiWindow : Window
     {
+        private readonly ВечерВКвартируEntities _db;
         public Uslugi Uslugi { get; private set; }
 
-        public EditUslugiWindow()
+        public EditUslugiWindow(ВечерВКвартируEntities db, Uslugi uslugi = null)
         {
             InitializeComponent();
-            Uslugi = new Uslugi();
+            _db = db;
+            Uslugi = uslugi ?? new Uslugi();
             DataContext = this;
         }
 
-        public EditUslugiWindow(Uslugi uslugi) : this()
+        public EditUslugiWindow(Uslugi uslugi)
         {
             Uslugi = uslugi;
         }

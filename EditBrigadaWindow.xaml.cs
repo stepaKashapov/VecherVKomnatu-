@@ -5,19 +5,18 @@ namespace VecherVKomnatu
 {
     public partial class EditBrigadaWindow : Window
     {
+        private readonly ВечерВКвартируEntities _db;
         public Brigada Brigada { get; private set; }
 
-        public EditBrigadaWindow()
+        public EditBrigadaWindow(ВечерВКвартируEntities db, Brigada brigada = null)
         {
             InitializeComponent();
-            Brigada = new Brigada();
+            _db = db;
+            Brigada = brigada ?? new Brigada();
             DataContext = this;
         }
 
-        public EditBrigadaWindow(Brigada brigada) : this()
-        {
-            Brigada = brigada;
-        }
+        
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {

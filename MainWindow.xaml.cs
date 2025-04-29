@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Data.Entity;
-using System.Globalization;
+using System.Data.Entity.Validation;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,216 +10,222 @@ namespace VecherVKomnatu
 {
     public partial class MainWindow : Window
     {
-        public static ВечерВКвартируEntities db;
-        private string currentView = "Договоры";
+        public ВечерВКвартируEntities db = new ВечерВКвартируEntities();
+        private string currentView;
 
         public MainWindow()
         {
-            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
-            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("ru-RU");
-
             InitializeComponent();
+            LoadData("Договоры"); // Загружаем договоры по умолчанию
+        }
+
+        private void LoadData(string viewName)
+        {
+            currentView = viewName;
+            tbTitle.Text = viewName;
+            lvData.ItemsSource = null;
+            lvData.View = new GridView();
 
             try
             {
-                db = new ВечерВКвартируEntities();
-                db.Database.Log = s => System.Diagnostics.Debug.WriteLine(s);
-                LoadData(currentView);
+                switch (viewName)
+                {
+                    case "Клиенты":
+                        ConfigureClientView();
+                        lvData.ItemsSource = db.Klient.ToList();
+                        break;
+
+                    case "Бригады":
+                        ConfigureBrigadaView();
+                        lvData.ItemsSource = db.Brigada.ToList();
+                        break;
+
+                    case "Работники":
+                        ConfigureRabView();
+                        lvData.ItemsSource = db.Rab.Include(r => r.Brigada1).ToList();
+                        break;
+
+                    case "Договоры":
+                        ConfigureDogovorView();
+                        lvData.ItemsSource = db.Dogovor
+                            .Include(d => d.Klient1)
+                            .Include(d => d.Brigada1)
+                            .ToList();
+                        break;
+
+                    case "Сметы":
+                        ConfigureSmetaView();
+                        lvData.ItemsSource = db.Smeta
+                            .Include(s => s.Dogovor)
+                            .Include(s => s.Uslugi1)
+                            .Include(s => s.Mat1)
+                            .ToList();
+                        break;
+
+                    case "Материалы":
+                        ConfigureMatView();
+                        lvData.ItemsSource = db.Mat.Include(m => m.EdIzmer).ToList();
+                        break;
+
+                    case "Единицы измерения":
+                        ConfigureEdIzmerView();
+                        lvData.ItemsSource = db.EdIzmer.ToList();
+                        break;
+
+                    case "Услуги":
+                        ConfigureUslugiView();
+                        lvData.ItemsSource = db.Uslugi.ToList();
+                        break;
+
+                    case "Оплаты":
+                        ConfigureOplataView();
+                        lvData.ItemsSource = db.Oplata
+                            .Include(o => o.Dogovor1)
+                            .ToList();
+                        break;
+
+                    default:
+                        lvData.ItemsSource = null;
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка подключения к базе данных: {ex.Message}", "Ошибка",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
-                Close();
+                MessageBox.Show($"Ошибка загрузки данных: {ex.Message}", "Ошибка", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
+
+            UpdateButtonStates();
+        }
+
+        private void ConfigureClientView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "ФИО", DisplayMemberBinding = new Binding("FIO"), Width = 200 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Телефон", DisplayMemberBinding = new Binding("tel"), Width = 120 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Дата рождения", DisplayMemberBinding = new Binding("dateR") { StringFormat = "dd.MM.yyyy" },
+                Width = 100
+            });
+            gridView.Columns.Add(new GridViewColumn { Header = "Серия", DisplayMemberBinding = new Binding("seria"), Width = 150 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Номер", DisplayMemberBinding = new Binding("nomer"), Width = 150 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureBrigadaView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Название бригады", DisplayMemberBinding = new Binding("name"), Width = 300 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Кол-во работников", DisplayMemberBinding = new Binding("Rab.Count"), Width = 100 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureRabView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "ФИО", DisplayMemberBinding = new Binding("FIO"), Width = 200 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Телефон", DisplayMemberBinding = new Binding("tel"), Width = 120 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Дата рождения", DisplayMemberBinding = new Binding("dateR") { StringFormat = "dd.MM.yyyy" },
+                Width = 100
+            });
+            gridView.Columns.Add(new GridViewColumn { Header = "Оклад", DisplayMemberBinding = new Binding("salary") { StringFormat = "{0:N2} ₽" }, Width = 100 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Бригада", DisplayMemberBinding = new Binding("Brigada1.name"), Width = 150 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Серия", DisplayMemberBinding = new Binding("seria"), Width = 150 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Номер", DisplayMemberBinding = new Binding("nomer"), Width = 150 }); lvData.View = gridView;
+        }
+
+        private void ConfigureDogovorView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "№", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Дата составления", DisplayMemberBinding = new Binding("dateSostav") { StringFormat = "dd.MM.yyyy" }, Width = 100 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Клиент", DisplayMemberBinding = new Binding("Klient1.FIO"), Width = 200 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Бригада", DisplayMemberBinding = new Binding("Brigada1.name"), Width = 150 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Дата начала", DisplayMemberBinding = new Binding("dateN") { StringFormat = "dd.MM.yyyy" }, Width = 100 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Дата конца", DisplayMemberBinding = new Binding("dateK") { StringFormat = "dd.MM.yyyy" }, Width = 100 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureSmetaView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Договор №", DisplayMemberBinding = new Binding("dog"), Width = 80 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Услуга", DisplayMemberBinding = new Binding("Uslugi1.name"), Width = 200 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Материал", DisplayMemberBinding = new Binding("Mat1.name"), Width = 150 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Кол-во", DisplayMemberBinding = new Binding("kolMat"), Width = 80 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureMatView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Наименование", DisplayMemberBinding = new Binding("name"), Width = 250 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Ед. измерения", DisplayMemberBinding = new Binding("EdIzmer.edIzmer1"), Width = 120 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Цена", DisplayMemberBinding = new Binding("price") { StringFormat = "{0:N2} ₽" }, Width = 100 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureEdIzmerView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Единица измерения", DisplayMemberBinding = new Binding("edIzmer1"), Width = 200 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureUslugiView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Наименование", DisplayMemberBinding = new Binding("name"), Width = 250 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Цена", DisplayMemberBinding = new Binding("price") { StringFormat = "{0:N2} ₽" }, Width = 100 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Описание", DisplayMemberBinding = new Binding("opisanie"), Width = 300 });
+            lvData.View = gridView;
+        }
+
+        private void ConfigureOplataView()
+        {
+            var gridView = new GridView();
+            gridView.Columns.Add(new GridViewColumn { Header = "ID", DisplayMemberBinding = new Binding("id"), Width = 50 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Дата оплаты", DisplayMemberBinding = new Binding("dateOplat") { StringFormat = "dd.MM.yyyy" }, Width = 100 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Договор №", DisplayMemberBinding = new Binding("Dogovor1.id"), Width = 80 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Клиент", DisplayMemberBinding = new Binding("Dogovor1.Klient1.FIO"), Width = 200 });
+            gridView.Columns.Add(new GridViewColumn { Header = "Сумма", DisplayMemberBinding = new Binding("sum") { StringFormat = "{0:N2} ₽" }, Width = 100 });
+            lvData.View = gridView;
         }
 
         private void NavigationButton_Click(object sender, RoutedEventArgs e)
         {
-            Button button = (Button)sender;
-            currentView = button.Content.ToString();
-            tbTitle.Text = currentView;
-            lvData.SelectedItem = null;
-            LoadData(currentView);
-        }
-
-        private void LoadData(string viewType)
-        {
-            try
+            var button = sender as Button;
+            if (button != null)
             {
-                lvData.ItemsSource = null;
-                lvData.View = new GridView();
-                GridView gridView = (GridView)lvData.View;
-                gridView.Columns.Clear();
-
-                detailsBorder.Visibility = Visibility.Collapsed;
-                detailsRow.Height = new GridLength(0);
-
-                switch (viewType)
-                {
-                    case "Договоры":
-                        SetupDogovorView();
-                        lvData.ItemsSource = db.Dogovor.Include(d => d.Klient1)
-                                                  .Include(d => d.Brigada1)
-                                                  .ToList()
-                                                  .Select(d => new
-                                                  {
-                                                      d.id,
-                                                      DateSostav = d.dateSostav.ToString("dd.MM.yyyy"),
-                                                      KlientName = d.Klient1?.FIO,
-                                                      DateN = d.dateN.ToString("dd.MM.yyyy"),
-                                                      DateK = d.dateK.ToString("dd.MM.yyyy"),
-                                                      BrigadaName = d.Brigada1?.name
-                                                  }).ToList();
-                        break;
-
-                    case "Клиенты":
-                        SetupKlientView();
-                        lvData.ItemsSource = db.Klient.ToList()
-                                                .Select(k => new
-                                                {
-                                                    k.id,
-                                                    k.FIO,
-                                                    k.tel,
-                                                    DateR = k.dateR.ToString("dd.MM.yyyy"),
-                                                    Passport = $"{k.seria} {k.nomer}"
-                                                }).ToList();
-                        break;
-
-                    case "Бригады":
-                        SetupBrigadaView();
-                        lvData.ItemsSource = db.Brigada.ToList()
-                                                  .Select(b => new
-                                                  {
-                                                      b.id,
-                                                      b.name
-                                                  }).ToList();
-                        break;
-
-                    case "Работники":
-                        SetupRabView();
-                        lvData.ItemsSource = db.Rab.Include(r => r.Brigada1)
-                                               .ToList()
-                                               .Select(r => new
-                                               {
-                                                   r.id,
-                                                   r.FIO,
-                                                   r.tel,
-                                                   DateR = r.dateR.ToString("dd.MM.yyyy"),
-                                                   r.salary,
-                                                   BrigadaName = r.Brigada1?.name,
-                                                   Passport = $"{r.seria} {r.nomer}"
-                                               }).ToList();
-                        break;
-
-                    case "Материалы":
-                        SetupMatView();
-                        lvData.ItemsSource = db.Mat.Include(m => m.EdIzmer)
-                                              .ToList()
-                                              .Select(m => new
-                                              {
-                                                  m.id,
-                                                  m.name,
-                                                  EdizmerName = m.EdIzmer?.edIzmer1,
-                                                  m.price
-                                              }).ToList();
-                        break;
-
-                    case "Единицы измерения":
-                        SetupEdizmerView();
-                        lvData.ItemsSource = db.EdIzmer.ToList()
-                                                  .Select(e => new
-                                                  {
-                                                      e.id,
-                                                      e.edIzmer1
-                                                  }).ToList();
-                        break;
-
-                    case "Услуги":
-                        SetupUslugiView();
-                        lvData.ItemsSource = db.Uslugi.ToList()
-                                                  .Select(u => new
-                                                  {
-                                                      u.id,
-                                                      u.name,
-                                                      u.price,
-                                                      u.opisanie
-                                                  }).ToList();
-                        break;
-
-                    case "Оплаты":
-                        SetupOplataView();
-                        lvData.ItemsSource = db.Oplata.Include(o => o.Dogovor1)
-                                                 .ToList()
-                                                 .Select(o => new
-                                                 {
-                                                     o.id,
-                                                     DateOplat = o.dateOplat.ToString("dd.MM.yyyy"),
-                                                     o.sum,
-                                                     DogovorNumber = $"Договор №{o.Dogovor1?.id}"
-                                                 }).ToList();
-                        break;
-
-                    case "Сметы":
-                        SetupSmetaView();
-                        lvData.ItemsSource = db.Smeta.Include(s => s.Dogovor)
-                                                .Include(s => s.Mat1)
-                                                .Include(s => s.Uslugi1)
-                                                .ToList()
-                                                .Select(s => new
-                                                {
-                                                    s.id,
-                                                    DogovorNumber = $"Договор №{s.Dogovor?.id}",
-                                                    UslugaName = s.Uslugi1?.name,
-                                                    MaterialName = s.Mat1?.name,
-                                                    s.kolMat,
-                                                    DogovorId = s.Dogovor?.id
-                                                }).ToList();
-                        break;
-                }
-
-                foreach (var column in gridView.Columns)
-                {
-                    column.Width = column.ActualWidth;
-                    column.Width = double.NaN;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка загрузки данных: {ex.Message}", "Ошибка",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
+                LoadData(button.Content.ToString());
             }
         }
 
         private void lvData_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            btnEdit.IsEnabled = lvData.SelectedItem != null;
-            btnDelete.IsEnabled = lvData.SelectedItem != null;
+            UpdateButtonStates();
 
+            // Показываем детали для сметы
             if (currentView == "Сметы" && lvData.SelectedItem != null)
             {
-                try
+                var smeta = lvData.SelectedItem as Smeta;
+                if (smeta != null)
                 {
-                    dynamic selectedSmeta = lvData.SelectedItem;
-                    int? dogovorId = selectedSmeta.DogovorId;
+                    detailsBorder.Visibility = Visibility.Visible;
+                    detailsRow.Height = new GridLength(200);
 
-                    if (dogovorId.HasValue)
-                    {
-                        var services = db.Smeta.Include(s => s.Uslugi1)
-                                          .Where(s => s.Dogovor.id == dogovorId && s.Uslugi1 != null)
-                                          .Select(s => s.Uslugi1)
-                                          .Distinct()
-                                          .ToList();
-
-                        lvServices.ItemsSource = services;
-                        detailsBorder.Visibility = Visibility.Visible;
-                        detailsRow.Height = new GridLength(200);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Ошибка загрузки услуг: {ex.Message}", "Ошибка",
-                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                    // Получаем все услуги договора, к которому относится эта смета
+                    lvServices.ItemsSource = db.Smeta
+                        .Where(s => s.dog == smeta.dog) // Все сметы этого договора
+                        .Select(s => s.Uslugi1)         // Услуги из этих смет
+                        .Distinct()                    // Уникальные услуги
+                        .ToList();
                 }
             }
             else
@@ -229,100 +235,11 @@ namespace VecherVKomnatu
             }
         }
 
-        #region Методы настройки отображения таблиц
-        private void SetupDogovorView()
+        private void UpdateButtonStates()
         {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Дата составления", "DateSostav", 100);
-            AddGridViewColumn("Клиент", "KlientName", 150);
-            AddGridViewColumn("Дата начала", "DateN", 100);
-            AddGridViewColumn("Дата окончания", "DateK", 100);
-            AddGridViewColumn("Бригада", "BrigadaName", 120);
+            btnEdit.IsEnabled = lvData.SelectedItem != null;
+            btnDelete.IsEnabled = lvData.SelectedItem != null;
         }
-
-        private void SetupKlientView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("ФИО", "FIO", 200);
-            AddGridViewColumn("Телефон", "tel", 120);
-            AddGridViewColumn("Дата рождения", "DateR", 100);
-            AddGridViewColumn("Паспорт", "Passport", 150);
-        }
-
-        private void SetupBrigadaView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Название", "name", 200);
-        }
-
-        private void SetupRabView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("ФИО", "FIO", 180);
-            AddGridViewColumn("Телефон", "tel", 100);
-            AddGridViewColumn("Дата рождения", "DateR", 100);
-            AddGridViewColumn("Оклад", "salary", 80, true);
-            AddGridViewColumn("Бригада", "BrigadaName", 120);
-            AddGridViewColumn("Паспорт", "Passport", 150);
-        }
-
-        private void SetupMatView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Наименование", "name", 150);
-            AddGridViewColumn("Ед. измерения", "EdizmerName", 100);
-            AddGridViewColumn("Цена", "price", 80, true);
-        }
-
-        private void SetupEdizmerView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Единица измерения", "edIzmer1", 150);
-        }
-
-        private void SetupUslugiView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Наименование", "name", 150);
-            AddGridViewColumn("Цена", "price", 80, true);
-            AddGridViewColumn("Описание", "opisanie", 250);
-        }
-
-        private void SetupOplataView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Дата оплаты", "DateOplat", 100);
-            AddGridViewColumn("Сумма", "sum", 100, true);
-            AddGridViewColumn("Договор", "DogovorNumber", 120);
-        }
-
-        private void SetupSmetaView()
-        {
-            AddGridViewColumn("ID", "id", 50);
-            AddGridViewColumn("Договор", "DogovorNumber", 120);
-            AddGridViewColumn("Услуга", "UslugaName", 200);
-            AddGridViewColumn("Материал", "MaterialName", 150);
-            AddGridViewColumn("Кол-во материалов", "kolMat", 120);
-        }
-
-        private void AddGridViewColumn(string header, string bindingPath, double? width = null, bool isMoney = false)
-        {
-            var gridView = (GridView)lvData.View;
-            var binding = new Binding(bindingPath)
-            {
-                StringFormat = isMoney ? "{0:N2} ₽" : null
-            };
-
-            var column = new GridViewColumn
-            {
-                Header = header,
-                DisplayMemberBinding = binding,
-                Width = width ?? double.NaN
-            };
-
-            gridView.Columns.Add(column);
-        }
-        #endregion
 
         private void btnAdd_Click(object sender, RoutedEventArgs e)
         {
@@ -331,186 +248,117 @@ namespace VecherVKomnatu
                 switch (currentView)
                 {
                     case "Клиенты":
-                        var klientWindow = new EditKlientWindow();
-                        klientWindow.Owner = this;
-                        klientWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var klientWindow = new EditKlientWindow(db);
                         if (klientWindow.ShowDialog() == true)
                         {
-                            var newKlient = new Klient
-                            {
-                                FIO = klientWindow.Klient.FIO,
-                                tel = klientWindow.Klient.tel,
-                                dateR = klientWindow.Klient.dateR,
-                                seria = klientWindow.Klient.seria,
-                                nomer = klientWindow.Klient.nomer
-                            };
-
-                            db.Klient.Add(newKlient);
+                            db.Klient.Add(klientWindow.Klient);
                             db.SaveChanges();
                             LoadData(currentView);
                         }
                         break;
 
-                    case "Бригады":
-                        var brigadaWindow = new EditBrigadaWindow();
-                        brigadaWindow.Owner = this;
-                        brigadaWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
+                    case "Бригады":
+                        var brigadaWindow = new EditBrigadaWindow(db);
                         if (brigadaWindow.ShowDialog() == true)
                         {
-                            var newBrigada = new Brigada
-                            {
-                                name = brigadaWindow.Brigada.name
-                            };
-
-                            db.Brigada.Add(newBrigada);
+                            db.Brigada.Add(brigadaWindow.Brigada);
                             db.SaveChanges();
                             LoadData(currentView);
                         }
                         break;
 
                     case "Работники":
-                        var rabWindow = new EditRabWindow();
-                        rabWindow.Owner = this;
-                        rabWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var rabWindow = new EditRabWindow(db);
                         if (rabWindow.ShowDialog() == true)
                         {
-                            var newRab = new Rab
-                            {
-                                FIO = rabWindow.Rab.FIO,
-                                tel = rabWindow.Rab.tel,
-                                dateR = rabWindow.Rab.dateR,
-                                salary = rabWindow.Rab.salary,
-                                brigada = rabWindow.Rab.brigada,
-                                seria = rabWindow.Rab.seria,
-                                nomer = rabWindow.Rab.nomer
-                            };
-
-                            db.Rab.Add(newRab);
+                            db.Rab.Add(rabWindow.Rab);
                             db.SaveChanges();
                             LoadData(currentView);
                         }
                         break;
 
                     case "Договоры":
-                        var dogovorWindow = new EditDogovorWindow();
-                        dogovorWindow.Owner = this;
-                        dogovorWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var dogovorWindow = new EditDogovorWindow(db);
                         if (dogovorWindow.ShowDialog() == true)
                         {
-                            var newDogovor = new Dogovor
-                            {
-                                dateSostav = dogovorWindow.Dogovor.dateSostav,
-                                klient = dogovorWindow.Dogovor.klient,
-                                dateN = dogovorWindow.Dogovor.dateN,
-                                dateK = dogovorWindow.Dogovor.dateK,
-                                brigada = dogovorWindow.Dogovor.brigada
-                            };
-
-                            db.Dogovor.Add(newDogovor);
+                            db.Dogovor.Add(dogovorWindow.Dogovor);
                             db.SaveChanges();
                             LoadData(currentView);
                         }
                         break;
 
                     case "Сметы":
-                        var smetaWindow = new EditSmetaWindow(new Smeta());
-                        smetaWindow.Owner = this;
-                        smetaWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var smetaWindow = new EditSmetaWindow(db);
                         if (smetaWindow.ShowDialog() == true)
                         {
-                            var newSmeta = new Smeta
+                            if (db.Dogovor.Any(d => d.id == smetaWindow.Smeta.dog) &&
+                                db.Uslugi.Any(u => u.id == smetaWindow.Smeta.uslugi) &&
+                                db.Mat.Any(m => m.id == smetaWindow.Smeta.mat))
                             {
-                                dog = smetaWindow.Smeta.dog,
-                                uslugi = smetaWindow.Smeta.uslugi,
-                                mat = smetaWindow.Smeta.mat,
-                                kolMat = smetaWindow.Smeta.kolMat
-                            };
-
-                            db.Smeta.Add(newSmeta);
-                            db.SaveChanges();
-                            LoadData(currentView);
+                                db.Smeta.Add(smetaWindow.Smeta);
+                                db.SaveChanges();
+                                LoadData(currentView);
+                            }
                         }
                         break;
 
                     case "Материалы":
-                        var matWindow = new EditMatWindow();
-                        matWindow.Owner = this;
-                        matWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var matWindow = new EditMatWindow(db);
                         if (matWindow.ShowDialog() == true)
                         {
-                            var newMat = new Mat
+                            if (db.EdIzmer.Any(x => x.id == matWindow.Mat.idIzmer))  // Заменили e на x
                             {
-                                name = matWindow.Mat.name,
-                                idIzmer = matWindow.Mat.idIzmer,
-                                price = matWindow.Mat.price
-                            };
+                                db.Mat.Add(matWindow.Mat);
+                                db.SaveChanges();
+                                LoadData(currentView);
+                            }
+                        }
+                        break;
 
-                            db.Mat.Add(newMat);
+                    case "Единицы измерения":
+                        var edIzmerWindow = new EditEdIzmerWindow(db);
+                        if (edIzmerWindow.ShowDialog() == true)
+                        {
+                            db.EdIzmer.Add(edIzmerWindow.EdIzmer);
                             db.SaveChanges();
                             LoadData(currentView);
                         }
                         break;
 
-                    
-
                     case "Услуги":
-                        var uslugiWindow = new EditUslugiWindow();
-                        uslugiWindow.Owner = this;
-                        uslugiWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var uslugiWindow = new EditUslugiWindow(db);
                         if (uslugiWindow.ShowDialog() == true)
                         {
-                            var newUslugi = new Uslugi
-                            {
-                                name = uslugiWindow.Uslugi.name,
-                                price = uslugiWindow.Uslugi.price,
-                                opisanie = uslugiWindow.Uslugi.opisanie
-                            };
-
-                            db.Uslugi.Add(newUslugi);
+                            db.Uslugi.Add(uslugiWindow.Uslugi);
                             db.SaveChanges();
                             LoadData(currentView);
                         }
                         break;
 
                     case "Оплаты":
-                        var oplataWindow = new EditOplataWindow();
-                        oplataWindow.Owner = this;
-                        oplataWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
+                        var oplataWindow = new EditOplataWindow(db);
                         if (oplataWindow.ShowDialog() == true)
                         {
-                            var newOplata = new Oplata
+                            if (db.Dogovor.Any(d => d.id == oplataWindow.Oplata.dogovor))
                             {
-                                dateOplat = oplataWindow.Oplata.dateOplat,
-                                sum = oplataWindow.Oplata.sum,
-                                dogovor = oplataWindow.Oplata.dogovor
-                            };
-
-                            db.Oplata.Add(newOplata);
-                            db.SaveChanges();
-                            LoadData(currentView);
+                                db.Oplata.Add(oplataWindow.Oplata);
+                                db.SaveChanges();
+                                LoadData(currentView);
+                            }
                         }
                         break;
 
-                    
-
                     default:
                         MessageBox.Show($"Добавление для раздела '{currentView}' не реализовано",
-                                        "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                            "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                         break;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при добавлении: {ex.Message}", "Ошибка",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -523,131 +371,114 @@ namespace VecherVKomnatu
                 switch (currentView)
                 {
                     case "Клиенты":
-                        dynamic selectedKlient = lvData.SelectedItem;
-                        var klient = db.Klient.Find(selectedKlient.id);
-                        if (klient != null)
+                        var klient = lvData.SelectedItem as Klient;
+                        var klientWindow = new EditKlientWindow(db, klient);
+                        if (klientWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditKlientWindow(klient);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(klient).CurrentValues.SetValues(klientWindow.Klient);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
                     case "Бригады":
-                        dynamic selectedBrigada = lvData.SelectedItem;
-                        var brigada = db.Brigada.Find(selectedBrigada.id);
-                        if (brigada != null)
+                        var brigada = lvData.SelectedItem as Brigada;
+                        var brigadaWindow = new EditBrigadaWindow(db, brigada);
+                        if (brigadaWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditBrigadaWindow(brigada);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(brigada).CurrentValues.SetValues(brigadaWindow.Brigada);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
                     case "Работники":
-                        dynamic selectedRab = lvData.SelectedItem;
-                        var rab = db.Rab.Find(selectedRab.id);
-                        if (rab != null)
+                        var rab = lvData.SelectedItem as Rab;
+                        var rabWindow = new EditRabWindow(db, rab);
+                        if (rabWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditRabWindow(rab);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(rab).CurrentValues.SetValues(rabWindow.Rab);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
                     case "Договоры":
-                        dynamic selectedDogovor = lvData.SelectedItem;
-                        var dogovor = db.Dogovor.Find(selectedDogovor.id);
-                        if (dogovor != null)
+                        var dogovor = lvData.SelectedItem as Dogovor;
+                        var dogovorWindow = new EditDogovorWindow(db, dogovor);  // Используем правильный конструктор
+                        if (dogovorWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditDogovorWindow(dogovor);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(dogovor).CurrentValues.SetValues(dogovorWindow.Dogovor);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
                     case "Сметы":
-                        dynamic selectedSmeta = lvData.SelectedItem;
-                        var smeta = db.Smeta.Find(selectedSmeta.id);
-                        if (smeta != null)
+                        var smeta = lvData.SelectedItem as Smeta;
+                        var smetaWindow = new EditSmetaWindow(db, smeta);
+                        if (smetaWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditSmetaWindow(smeta);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(smeta).CurrentValues.SetValues(smetaWindow.Smeta);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
                     case "Материалы":
-                        dynamic selectedMat = lvData.SelectedItem;
-                        var mat = db.Mat.Find(selectedMat.id);
-                        if (mat != null)
+                        var mat = lvData.SelectedItem as Mat;
+                        var matWindow = new EditMatWindow(db, mat);
+                        if (matWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditMatWindow(mat);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(mat).CurrentValues.SetValues(matWindow.Mat);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
-                    
+                    case "Единицы измерения":
+                        var edIzmer = lvData.SelectedItem as EdIzmer;
+                        var edIzmerWindow = new EditEdIzmerWindow(db, edIzmer);
+                        if (edIzmerWindow.ShowDialog() == true)
+                        {
+                            db.Entry(edIzmer).CurrentValues.SetValues(edIzmerWindow.EdIzmer);
+                            db.SaveChanges();
+                            LoadData(currentView);
+                        }
+                        break;
 
                     case "Услуги":
-                        dynamic selectedUslugi = lvData.SelectedItem;
-                        var uslugi = db.Uslugi.Find(selectedUslugi.id);
-                        if (uslugi != null)
+                        var uslugi = lvData.SelectedItem as Uslugi;
+                        var uslugiWindow = new EditUslugiWindow(db, uslugi);
+                        if (uslugiWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditUslugiWindow(uslugi);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(uslugi).CurrentValues.SetValues(uslugiWindow.Uslugi);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
                     case "Оплаты":
-                        dynamic selectedOplata = lvData.SelectedItem;
-                        var oplata = db.Oplata.Find(selectedOplata.id);
-                        if (oplata != null)
+                        var oplata = lvData.SelectedItem as Oplata;
+                        var oplataWindow = new EditOplataWindow(db, oplata);
+                        if (oplataWindow.ShowDialog() == true)
                         {
-                            var dialog = new EditOplataWindow(oplata);
-                            if (dialog.ShowDialog() == true)
-                            {
-                                db.SaveChanges();
-                                LoadData(currentView);
-                            }
+                            db.Entry(oplata).CurrentValues.SetValues(oplataWindow.Oplata);
+                            db.SaveChanges();
+                            LoadData(currentView);
                         }
                         break;
 
-                   
-
                     default:
                         MessageBox.Show($"Редактирование для раздела '{currentView}' не реализовано",
-                                      "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                            "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                         break;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Ошибка при редактировании: {ex.Message}", "Ошибка",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -655,43 +486,100 @@ namespace VecherVKomnatu
         {
             if (lvData.SelectedItem == null) return;
 
-            var result = MessageBox.Show("Вы уверены, что хотите удалить запись?",
-                                       "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (result != MessageBoxResult.Yes) return;
+            var result = MessageBox.Show("Удалить выбранную запись?", "Подтверждение",
+                MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-            try
+            if (result == MessageBoxResult.Yes)
             {
-                switch (currentView)
+                try
                 {
-                    case "Договоры":
-                        dynamic selectedDogovor = lvData.SelectedItem;
-                        var dogovor = db.Dogovor.Find(selectedDogovor.id);
-                        if (dogovor != null)
-                        {
+                    switch (currentView)
+                    {
+                        case "Клиенты":
+                            var klient = lvData.SelectedItem as Klient;
+                            db.Klient.Remove(klient);
+                            break;
+
+                        case "Бригады":
+                            var brigada = lvData.SelectedItem as Brigada;
+                            db.Brigada.Remove(brigada);
+                            break;
+
+                        case "Работники":
+                            var rab = lvData.SelectedItem as Rab;
+                            db.Rab.Remove(rab);
+                            break;
+
+                        case "Договоры":
+                            var dogovor = lvData.SelectedItem as Dogovor;
                             db.Dogovor.Remove(dogovor);
-                            db.SaveChanges();
-                            LoadData(currentView);
-                        }
-                        break;
-                        // Аналогичные case для других сущностей...
+                            break;
+
+                        case "Сметы":
+                            var smeta = lvData.SelectedItem as Smeta;
+                            db.Smeta.Remove(smeta);
+                            break;
+
+                        case "Материалы":
+                            var mat = lvData.SelectedItem as Mat;
+                            db.Mat.Remove(mat);
+                            break;
+
+                        case "Единицы измерения":
+                            var edIzmer = lvData.SelectedItem as EdIzmer;
+                            db.EdIzmer.Remove(edIzmer);
+                            break;
+
+                        case "Услуги":
+                            var uslugi = lvData.SelectedItem as Uslugi;
+                            db.Uslugi.Remove(uslugi);
+                            break;
+
+                        case "Оплаты":
+                            var oplata = lvData.SelectedItem as Oplata;
+                            db.Oplata.Remove(oplata);
+                            break;
+
+                        default:
+                            MessageBox.Show($"Удаление для раздела '{currentView}' не реализовано",
+                                "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                            return;
+                    }
+
+                    db.SaveChanges();
+                    LoadData(currentView);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ошибка при удалении: {ex.Message}", "Ошибка",
-                              MessageBoxButton.OK, MessageBoxImage.Error);
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при удалении: {ex.Message}", "Ошибка",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
         private void btnReport_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Функция отчета будет реализована в следующей версии",
-                          "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Функция формирования отчета будет реализована позже", 
+                "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            db?.Dispose();
+            db.Dispose();
+        }
+
+        private void ShowValidationErrors(DbEntityValidationException ex)
+        {
+            string errorMessage = "Ошибка валидации:\n";
+            foreach (var eve in ex.EntityValidationErrors)
+            {
+                foreach (var ve in eve.ValidationErrors)
+                {
+                    errorMessage += $"- {ve.PropertyName}: {ve.ErrorMessage}\n";
+                }
+            }
+            MessageBox.Show(errorMessage, "Ошибка валидации", 
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }
